@@ -1,62 +1,54 @@
 #include <iostream>
 #include <vector>
 #include <Windows.h>
-#include "globalStructures.h"
-#include"Map.h"
+#include "Neuron.h"
+#include "Synapse.h"
 
-class Game {
-private:
-  Map map;
-public:
-  Game() {
-    map.create({ 20, 20 });
-  }
-};
-
-class Neuron {
-private:
-  float input;
-  float output;
-
-public:
-
-};
-
-class Synapse {
-private:
-  float weight;
-  int input_neuron;
-  int output_neuron;
-
-public:
-  Synapse(int input_neuron, int output_neuron) {
-    this->input_neuron = input_neuron;
-    this->output_neuron = output_neuron;
-  }
-};
+const int INPUT_NEURONS = 2;
+const int HIDDEN_NEURONS = 6;
+const int OUTPUT_NEURONS = 2;
 
 class Network {
 private:
-  std::vector<Synapse> synapse;
-  std::vector<Neuron> layer_input;
-  std::vector<Neuron> layer_output;
+  Neuron inputLayer[INPUT_NEURONS];
+  Neuron hiddenLayer[HIDDEN_NEURONS];
+  Neuron outputLayer[OUTPUT_NEURONS];
+  Synapse weight[INPUT_NEURONS * HIDDEN_NEURONS * OUTPUT_NEURONS];
 
 public:
-  Network(int input, int output) {
-    for (int i = 0; i < input * output; i++) {
-      weight.push_back((float)(rand() % 11) / 10);
-      std::cout << weight[i] << '\n';
+  Network(float input[INPUT_NEURONS]) {
+    for (int i = 0; i < INPUT_NEURONS; i++) {
+      inputLayer[i].addInput(input[i]);
     }
-  }
 
-  Network() {
+    int w = 0;
+    for (int input_neuron = 0; input_neuron < INPUT_NEURONS; input_neuron++) {
+      for (int hidden_neuron = 0; hidden_neuron < HIDDEN_NEURONS; hidden_neuron++) {
+        weight[w].inputNeuron = input_neuron;
+        weight[w].outputNeuron = hidden_neuron;
+        weight[w].setInput(inputLayer[input_neuron].getOutput());
+        hiddenLayer[hidden_neuron].addInput(weight[w].getOutput());
+        w++;
+      }
+    }
+    for (int hidden_neuron = 0; hidden_neuron < HIDDEN_NEURONS; hidden_neuron++) {
+      for (int output_neuron = 0; output_neuron < OUTPUT_NEURONS; output_neuron++) {
+        weight[w].inputNeuron = hidden_neuron;
+        weight[w].outputNeuron = output_neuron;
+        weight[w].setInput(hiddenLayer[hidden_neuron].getOutput());
+        outputLayer[output_neuron].addInput(weight[w].getOutput());
+        w++;
+      }
+    }
 
+    std::cout << outputLayer[0].getOutput() << '\t' << outputLayer[1].getOutput() << '\n';
   }
 };
 
 int main() {
-  
-  Network neuro_network(2, 1);
+  srand(1);
+  float input[INPUT_NEURONS] = { 0.0, 1.0 };
+  Network neuro_network(input);
 
   return 0;
 }
